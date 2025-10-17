@@ -1,17 +1,5 @@
 from flask_restful import Resource, reqparse
-
-'''
-
-Adicionar como atributos principais do agendamento:
-
-description : descrição do serviço agendado
-observations : observações adicionais
-data_time : data e hora do agendamento 
-creation_date : timestamp de criação
-updated_date : timestamp de atualização
-status : status atual
-
-'''
+from models.appointment import AppointmentModel
 
 appointments = [
   {
@@ -53,22 +41,17 @@ class Appointment(Resource):
     return {'message': 'Appointment not found.'}, 404
   
   def post(self, appointment_id):
-    
     data = Appointment.args.parse_args()
-    
-    new_appointment = { 'appointment_id': appointment_id, **data }
-    
+    appointment_object = AppointmentModel(appointment_id, **data)
+    new_appointment = appointment_object.json()
     appointments.append(new_appointment)
-    return new_appointment, 200
+    return new_appointment, 201
   
   def put(self, appointment_id):
-    
     data = Appointment.args.parse_args()
-    
-    new_appointment = { 'appointment_id': appointment_id, **data }
-    
+    appointment_object = AppointmentModel(appointment_id, **data)
+    new_appointment = appointment_object.json()
     appointment = Appointment.find_appointment(appointment_id)
-    
     if appointment:
       appointment.update(new_appointment)
       return new_appointment, 200
