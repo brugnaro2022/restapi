@@ -1,1 +1,5 @@
-This is Generic Appointment Project.
+*** Comandos importantes
+
+Instalação das dependências:
+
+pip install -r requirements.txt
