@@ -21,44 +21,43 @@ appointments = [
 
 class Appointments(Resource):
   def get(self):
-    return {'appointments': appointments}
+    return {'appointments': [appointment.json() for appointment in AppointmentModel.query.all()]}
   
 class Appointment(Resource):
   args = reqparse.RequestParser()
   args.add_argument('name')
   args.add_argument('description')
   
-  def find_appointment(appointment_id):
-    for appointment in appointments:
-      if appointment['appointment_id'] == appointment_id:
-        return appointment
-    return None
-  
   def get(self, appointment_id):
-    appointment = Appointment.find_appointment(appointment_id)
+    appointment = AppointmentModel.find_appointment(appointment_id)
     if appointment:
-      return appointment
+      return appointment.json()
     return {'message': 'Appointment not found.'}, 404
   
   def post(self, appointment_id):
+    if AppointmentModel.find_appointment(appointment_id):
+      return {"message": "Appointment id '{}' already exists.".format(appointment_id)}, 400
+    
     data = Appointment.args.parse_args()
-    appointment_object = AppointmentModel(appointment_id, **data)
-    new_appointment = appointment_object.json()
-    appointments.append(new_appointment)
-    return new_appointment, 201
-  
+    appointment = AppointmentModel(appointment_id, **data)
+    appointment.save_appointment()
+    return appointment.json()
+    
   def put(self, appointment_id):
     data = Appointment.args.parse_args()
-    appointment_object = AppointmentModel(appointment_id, **data)
-    new_appointment = appointment_object.json()
-    appointment = Appointment.find_appointment(appointment_id)
-    if appointment:
-      appointment.update(new_appointment)
-      return new_appointment, 200
-    appointments.append(new_appointment)
-    return new_appointment, 201 # Created
+    appointment_found = AppointmentModel.find_appointment(appointment_id)
+    if appointment_found:
+      appointment_found.update_appointment(**data)
+      appointment_found.save_appointment()
+      return appointment_found.json(), 200
+    appointment = AppointmentModel(appointment_id, **data)
+    appointment.save_appointment()
+    return appointment.json(), 201
       
   def delete(self, appointment_id):
-    global appointments
-    appointments = [appointment for appointment in appointments if appointment['appointment_id'] != appointment_id]
-    return {'message': 'Appointment deleted.'}
+    appointment = AppointmentModel.find_appointment(appointment_id)
+    if appointment: 
+      appointment.delete_appointment()
+      return {'message': 'Appointment deleted.'}
+    return {'message': 'Appointment not found.'}, 404
+    
