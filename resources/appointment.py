@@ -25,8 +25,8 @@ class Appointments(Resource):
   
 class Appointment(Resource):
   args = reqparse.RequestParser()
-  args.add_argument('name')
-  args.add_argument('description')
+  args.add_argument('name', type=str, required=True, help="The field 'name' cannot be left blank")
+  args.add_argument('description', type=str, required=True, help="The field 'description' cannot be left blank")
   
   def get(self, appointment_id):
     appointment = AppointmentModel.find_appointment(appointment_id)
@@ -36,11 +36,16 @@ class Appointment(Resource):
   
   def post(self, appointment_id):
     if AppointmentModel.find_appointment(appointment_id):
-      return {"message": "Appointment id '{}' already exists.".format(appointment_id)}, 400
+      return {"message": "Appointment id '{}' already exists.".format(appointment_id)}, 400 # Bad Request
     
     data = Appointment.args.parse_args()
     appointment = AppointmentModel(appointment_id, **data)
-    appointment.save_appointment()
+    
+    try:
+      appointment.save_appointment()
+    except:
+      return { "message": "An internal error occurred trying to save appointment." }, 500 # Internal Server Error
+
     return appointment.json()
     
   def put(self, appointment_id):
@@ -51,13 +56,22 @@ class Appointment(Resource):
       appointment_found.save_appointment()
       return appointment_found.json(), 200
     appointment = AppointmentModel(appointment_id, **data)
-    appointment.save_appointment()
+
+    try:
+      appointment.save_appointment()
+    except:
+      return { "message": "An internal error occurred trying to save appointment." }, 500 # Internal Server Error
+
     return appointment.json(), 201
       
   def delete(self, appointment_id):
     appointment = AppointmentModel.find_appointment(appointment_id)
-    if appointment: 
-      appointment.delete_appointment()
+    if appointment:
+      try:
+        appointment.delete_appointment()
+      except:
+        return { "message": "An error occurred trying to delete appointment." }, 500 # Internal Server Error
+      
       return {'message': 'Appointment deleted.'}
     return {'message': 'Appointment not found.'}, 404
     
