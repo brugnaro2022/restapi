@@ -8,6 +8,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dbteste.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'your-secret-key-change-this'  # Adicionar chave JWT
+app.config['JWT_IDENTITY_CLAIM'] = 'sub'  # Permitir diferentes tipos de identity
 api = Api(app)
 jwt = JWTManager(app)
 

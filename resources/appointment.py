@@ -1,5 +1,6 @@
 from flask_restful import Resource, reqparse
 from models.appointment import AppointmentModel
+from flask_jwt_extended import jwt_required
 
 appointments = [
   {
@@ -34,6 +35,7 @@ class Appointment(Resource):
       return appointment.json()
     return {'message': 'Appointment not found.'}, 404
   
+  @jwt_required()
   def post(self, appointment_id):
     if AppointmentModel.find_appointment(appointment_id):
       return {"message": "Appointment id '{}' already exists.".format(appointment_id)}, 400 # Bad Request
@@ -48,6 +50,7 @@ class Appointment(Resource):
 
     return appointment.json()
     
+  @jwt_required()
   def put(self, appointment_id):
     data = Appointment.args.parse_args()
     appointment_found = AppointmentModel.find_appointment(appointment_id)
@@ -63,7 +66,8 @@ class Appointment(Resource):
       return { "message": "An internal error occurred trying to save appointment." }, 500 # Internal Server Error
 
     return appointment.json(), 201
-      
+  
+  @jwt_required()
   def delete(self, appointment_id):
     appointment = AppointmentModel.find_appointment(appointment_id)
     if appointment:

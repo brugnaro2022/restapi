@@ -1,6 +1,6 @@
 from flask_restful import Resource, reqparse
 from models.user import UserModel
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required
 import hmac
 
 # Substituição para safe_str_cmp removido do Werkzeug 2.2+
@@ -19,6 +19,7 @@ class User(Resource):
       return user.json()
     return {'message': 'User not found.'}, 404
       
+  @jwt_required()
   def delete(self, user_id):
     user = UserModel.find_user(user_id)
     if user:
@@ -50,7 +51,7 @@ class UserLogin(Resource):
     user = UserModel.find_by_login(data['login'])
 
     if user and safe_str_cmp(user.password, data['password']):
-      access_token = create_access_token(identity=user.user_id)
+      access_token = create_access_token(identity=str(user.user_id))
       return {'access_token': access_token}, 200
     return {'message': 'The username or password is incorrect.'}, 401 # Unauthorized
 
