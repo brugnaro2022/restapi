@@ -45,8 +45,8 @@ class Appointment(Resource):
     
     try:
       appointment.save_appointment()
-    except:
-      return { "message": "An internal error occurred trying to save appointment." }, 500 # Internal Server Error
+    except Exception as e:
+      return { "message": f"An internal error occurred: {str(e)}" }, 500 # Internal Server Error
 
     return appointment.json()
     

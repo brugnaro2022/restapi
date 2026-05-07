@@ -1,7 +1,8 @@
 from flask_restful import Resource, reqparse
 from models.user import UserModel
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 import hmac
+from blacklist import BLACKLIST
 
 # Substituição para safe_str_cmp removido do Werkzeug 2.2+
 def safe_str_cmp(a, b):
@@ -55,4 +56,10 @@ class UserLogin(Resource):
       return {'access_token': access_token}, 200
     return {'message': 'The username or password is incorrect.'}, 401 # Unauthorized
 
+class UserLogout(Resource):
 
+  @jwt_required()
+  def post(self):
+    jwt_id = get_jwt()['jti'] # JWT Token Identifier
+    BLACKLIST.add(jwt_id)
+    return {'message': 'Logged out successfully!'}, 200
